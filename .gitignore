@@ -1,0 +1,30 @@
+### Logs
+*.log
+
+### IntelliJ
+.idea/
+.idea_modules/
+/*.iml
+/out/
+
+### Linux metadata
+.~lock.*
+
+### Scala
+*.class
+.cache
+.history
+.lib/
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+.scala_dependencies
+.worksheet
+
+### Spark
+/spark-warehouse/
+
+
