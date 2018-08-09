@@ -2,10 +2,12 @@ package com.toptal.git.tomlous.model
 
 import java.time.Instant
 
+import com.toptal.git.tomlous.model.meta.DBItem
+
 case class User(
-                 id: Option[Long],
+                 override val id: Option[Long],
                  role: UserRole,
                  username: String,
                  password: String,
-                 created: Option[Instant]
-               )
+                 override val created: Option[Instant]
+               ) extends DBItem

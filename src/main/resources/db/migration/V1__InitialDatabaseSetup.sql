@@ -13,6 +13,6 @@ CREATE TABLE User(
  role ENUM('regular', 'userManager', 'admin'),
  username VARCHAR(255) UNIQUE,
  password VARCHAR(255)  NOT NULL,
- created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMPx``
+ created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

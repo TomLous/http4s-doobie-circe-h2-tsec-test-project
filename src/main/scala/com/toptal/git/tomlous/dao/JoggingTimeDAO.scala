@@ -7,13 +7,14 @@ import java.time.ZoneOffset.UTC
 
 import cats.effect.IO
 import com.toptal.git.tomlous.dao.error.NotFoundError
+import com.toptal.git.tomlous.dao.meta.CrudDAO
 import com.toptal.git.tomlous.model.JoggingTime
 import doobie.util.transactor.Transactor
 import fs2.Stream
 import doobie._
 import doobie.implicits._
 
-case class JoggingTimeDAO(transactor: Transactor[IO]) {
+case class JoggingTimeDAO(transactor: Transactor[IO]) extends CrudDAO[JoggingTime]{
 
   private implicit val localTimeMeta: Meta[LocalTime] = Meta[Time].xmap(_.toLocalTime, Time.valueOf)
   private implicit val localDateTimeMeta: Meta[LocalDateTime] = Meta[Timestamp].xmap(ts => LocalDateTime.ofInstant(ts.toInstant, UTC), ldt =>  new Timestamp(ldt.toInstant(UTC).toEpochMilli))
