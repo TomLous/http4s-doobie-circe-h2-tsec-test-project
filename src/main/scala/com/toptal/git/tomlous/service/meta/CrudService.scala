@@ -13,7 +13,7 @@ import org.http4s.HttpService
 import org.http4s.circe._
 import org.http4s.dsl.Http4sDsl
 
-abstract class  CrudService[T <: DBItem](dao: CrudDAO[T], Endpoint: String)(implicit val encItem: Encoder[T], encList: Encoder[List[T]], decItem: Decoder[T]) extends Http4sDsl[IO] {
+abstract class  CrudService[T <: DBItem](dao: CrudDAO[T], val Endpoint: String)(implicit val encItem: Encoder[T], encList: Encoder[List[T]], decItem: Decoder[T]) extends Http4sDsl[IO] {
 
   val crudService = HttpService[IO] {
     case GET -> Root / Endpoint =>
@@ -55,7 +55,7 @@ abstract class  CrudService[T <: DBItem](dao: CrudDAO[T], Endpoint: String)(impl
       }
   }
 
-  private def result(result: Either[DAOError, T]) = {
+  def result(result: Either[DAOError, T]) = {
     result match {
       case Left(NotFoundError) => NotFound("Not Found")
       case Left(UniqueConstraintError) => InternalServerError("Duplicate data")
