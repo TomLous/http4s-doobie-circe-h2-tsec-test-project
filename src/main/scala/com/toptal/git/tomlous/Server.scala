@@ -5,12 +5,13 @@ import cats.effect.{Effect, IO}
 import fs2.{Stream, StreamApp}
 import org.http4s.server.blaze.BlazeBuilder
 import cats.effect.IO
-import com.toptal.git.tomlous.dao.JoggingTimeDAO
+import com.sun.tools.internal.xjc.reader.xmlschema.bindinfo.BIConversion.User
+import com.toptal.git.tomlous.dao.{JoggingTimeDAO, UserDAO}
 import fs2.{Stream, StreamApp}
 import fs2.StreamApp.ExitCode
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.blaze.BlazeBuilder
-import service.{JoggingTimeService}
+import service.{JoggingTimeService, UserService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import tsec.passwordhashers.jca.BCrypt
@@ -46,7 +47,7 @@ object Server extends StreamApp[IO] with Http4sDsl[IO] {
       exitCode <- BlazeBuilder[IO]
         .bindHttp(config.server.port, config.server.host)
         .mountService(JoggingTimeService(JoggingTimeDAO(transactor)).service, "/")
-//        .mountService(JoggingTimeService(JoggingTimeDAO(transactor)).service, "/")
+        .mountService(UserService(UserDAO(transactor)).service, "/")
         .serve
     } yield exitCode
   }

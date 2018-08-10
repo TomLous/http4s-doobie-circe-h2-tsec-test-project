@@ -2,7 +2,7 @@ package com.toptal.git.tomlous.model
 
 import java.time.Instant
 
-import com.toptal.git.tomlous.model.meta.DBItem
+import meta.DBItem
 
 case class User(
                  override val id: Option[Long],

@@ -1,8 +1,11 @@
 package com.toptal.git.tomlous.service.meta
 
 import cats.effect.IO
-import com.toptal.git.tomlous.dao.error.NotFoundError
+import cats.data._
+import com.toptal.git.tomlous.dao.error.DAOErrors._
 import com.toptal.git.tomlous.dao.meta.CrudDAO
+import com.toptal.git.tomlous.model.UserRole
+
 import com.toptal.git.tomlous.model.meta.DBItem
 import io.circe._
 import io.circe.syntax._
@@ -26,10 +29,14 @@ abstract class  CrudService[T <: DBItem](dao: CrudDAO[T], Endpoint: String)(impl
       } yield response
 
     case req@POST -> Root / Endpoint =>
+      val complex = for {
+        item <- EitherT.right(req.decodeJson[T])
+        createdResult <- EitherT(dao.create(item))
+        getResult <- EitherT(dao.get(createdResult.id.get))
+      } yield getResult
+
       for {
-        item <- req.decodeJson[T]
-        createdItem <- dao.create(item)
-        getResult <- dao.get(createdItem.id.get)
+        getResult <- complex.value
         response <- result(getResult)
       } yield response
 
@@ -42,14 +49,18 @@ abstract class  CrudService[T <: DBItem](dao: CrudDAO[T], Endpoint: String)(impl
 
     case DELETE -> Root / Endpoint / LongVar(id) =>
       dao.delete(id).flatMap {
-        case Left(NotFoundError) => NotFound()
+        case Left(NotFoundError) => NotFound("Not Found")
         case Right(_) => NoContent()
+        case Left(e) => InternalServerError(e.toString)
       }
   }
 
-  private def result(result: Either[NotFoundError.type, T]) = {
+  private def result(result: Either[DAOError, T]) = {
     result match {
-      case Left(NotFoundError) => NotFound()
+      case Left(NotFoundError) => NotFound("Not Found")
+      case Left(UniqueConstraintError) => InternalServerError("Duplicate data")
+      case Left(CustomError(e)) => InternalServerError(e.value)
+      case Left(e) => InternalServerError(e.toString)
       case Right(item) => Ok(item.asJson)
     }
   }

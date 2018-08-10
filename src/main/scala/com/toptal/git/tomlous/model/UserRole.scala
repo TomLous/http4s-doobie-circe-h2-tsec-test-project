@@ -1,14 +1,17 @@
 package com.toptal.git.tomlous.model
 
-abstract sealed class UserRole(val role: String)
-object RegularRole extends UserRole("regular")
-object UserManagerRole extends UserRole("userManager")
-object AdminRole extends UserRole("admin")
+import io.circe._
+
+case class UserRole(role: String) extends AnyVal
 
 object UserRole {
-  private def values = Set(RegularRole, UserManagerRole, AdminRole)
+
+  implicit val encodeUserRole: Encoder[UserRole] = Encoder.encodeString.contramap[UserRole](_.role)
+  implicit val decodeUserRole: Decoder[UserRole] = Decoder.decodeString.map[UserRole](UserRole.unsafeFromString)
+
+  private def roles = List("regular","userManager", "admin").map(UserRole(_)).toSet
 
   def unsafeFromString(value: String): UserRole = {
-    values.find(_.role == value).get
+    roles.find(_.role.toLowerCase == value.toLowerCase).get
   }
 }

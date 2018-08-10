@@ -9,7 +9,7 @@ CREATE TABLE JoggingTime(
 );
 
 CREATE TABLE User(
- id LONG PRIMARY KEY,
+ id BIGINT AUTO_INCREMENT PRIMARY KEY,
  role ENUM('regular', 'userManager', 'admin'),
  username VARCHAR(255) UNIQUE,
  password VARCHAR(255)  NOT NULL,
