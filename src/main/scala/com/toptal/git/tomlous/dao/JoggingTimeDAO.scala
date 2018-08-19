@@ -8,17 +8,16 @@ import java.time.ZoneOffset.UTC
 import cats.effect.IO
 import com.toptal.git.tomlous.dao.error.DAOErrors._
 import com.toptal.git.tomlous.dao.meta.CrudDAO
+import com.toptal.git.tomlous.dao.meta.MetaConfig.JoggingTimeMetaConfig
 import com.toptal.git.tomlous.model.JoggingTime
 import doobie.util.transactor.Transactor
 import fs2.Stream
 import doobie._
 import doobie.implicits._
 
-case class JoggingTimeDAO(transactor: Transactor[IO]) extends CrudDAO[JoggingTime]{
+case class JoggingTimeDAO(transactor: Transactor[IO]) extends CrudDAO[JoggingTime] with JoggingTimeMetaConfig{
 
-  private implicit val localTimeMeta: Meta[LocalTime] = Meta[Time].xmap(_.toLocalTime, Time.valueOf)
-  private implicit val localDateTimeMeta: Meta[LocalDateTime] = Meta[Timestamp].xmap(ts => LocalDateTime.ofInstant(ts.toInstant, UTC), ldt =>  new Timestamp(ldt.toInstant(UTC).toEpochMilli))
-
+  implicit val han = LogHandler.jdkLogHandler
 
   def list: IO[List[JoggingTime]] = {
     sql"SELECT id, datetime, distance, duration, location, weather, created FROM JoggingTime".query[JoggingTime].to[List].transact(transactor)

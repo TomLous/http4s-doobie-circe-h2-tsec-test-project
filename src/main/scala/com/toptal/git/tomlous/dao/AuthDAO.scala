@@ -2,18 +2,23 @@ package com.toptal.git.tomlous.dao
 
 import cats.effect.IO
 import com.toptal.git.tomlous.dao.error.DAOErrors._
+import com.toptal.git.tomlous.dao.meta.MetaConfig.UserMetaConfig
 import com.toptal.git.tomlous.model.{User, UserRole}
+import com.typesafe.scalalogging.LazyLogging
 import doobie._
 import doobie.implicits._
 import doobie.util.transactor.Transactor
 import org.http4s.BasicCredentials
 
-case class AuthDAO(transactor: Transactor[IO]){
+case class AuthDAO(transactor: Transactor[IO]) extends UserMetaConfig with LazyLogging{
 
-  private implicit val userRoleMeta: Meta[UserRole] = Meta[String].xmap(UserRole.unsafeFromString, _.role)
-
+  implicit val han = LogHandler.jdkLogHandler
 
   def login(credentials: BasicCredentials): IO[Option[User]] = {
-    sql"SELECT id, role, username, password, created FROM User WHERE username = ${credentials.username} AND password = HASH('SHA256', STRINGTOUTF8(${credentials.password}), 1000)".query[User].option.transact(transactor)
+    logger.debug(s"Login ${credentials.username}")
+    (fr"SELECT id, role, username, password, created FROM User WHERE username = ${credentials.username} AND password = " ++ sqlPasswordFunction(credentials.password))
+      .query[User]
+      .option
+      .transact(transactor)
   }
 }

@@ -9,33 +9,44 @@ import org.http4s.server.blaze.BlazeBuilder
 import org.http4s.client.blaze._
 import org.http4s.client._
 import cats.effect.IO
-import com.sun.tools.internal.xjc.reader.xmlschema.bindinfo.BIConversion.User
-import com.toptal.git.tomlous.auth.InMemoryBearerTokenBackingStore
+import com.toptal.git.tomlous.auth.{AuthedServiceHandler, InMemoryBearerTokenBackingStore, UserBackingStore}
 import com.toptal.git.tomlous.dao._
+import com.toptal.git.tomlous.model.User
 import fs2.{Stream, StreamApp}
 import fs2.StreamApp.ExitCode
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.blaze.BlazeBuilder
 import service._
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import tsec.passwordhashers.jca.BCrypt
+import tsec.authentication.{BackingStore, BearerTokenAuthenticator, SecuredRequestHandler, TSecBearerToken}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
 object Server extends StreamApp[IO] with Http4sDsl[IO] {
+
+
   def stream(args: List[String], requestShutdown: IO[Unit]): Stream[IO, ExitCode] = {
     for {
       config <- Stream.eval(AppConfig.load())
       transactor <- Stream.eval(DatabaseConfig.transactor(config.database))
       _ <- Stream.eval(DatabaseConfig.initialize(transactor))
       httpClient <- Http1Client.stream[IO]()
+
+      authedServiceHandler = AuthedServiceHandler(UserDAO(transactor), InMemoryBearerTokenBackingStore, config.auth)
+
+//      userDAO = UserDAO(transactor)
+//      userStore = UserBackingStore(userDAO)
+//      tokenStore = InMemoryBearerTokenBackingStore
+//      authenticationHandler = SecuredRequestHandler(BearerTokenAuthenticator(tokenStore, userStore, config.auth.tokenSettings))
+
       exitCode <- BlazeBuilder[IO]
         .bindHttp(config.server.port, config.server.host)
-        .mountService(AuthService(AuthDAO(transactor), InMemoryBearerTokenBackingStore, config.auth).service, "/")
-        .mountService(JoggingTimeService(JoggingTimeDAO(transactor), WeatherBitApi(httpClient, config.weatherBitApi)).service, "/")
-        .mountService(UserService(UserDAO(transactor)).service, "/")
+        .mountService(
+          AuthService(AuthDAO(transactor), InMemoryBearerTokenBackingStore, config.auth).service, "/auth")
+        .mountService(
+          JoggingTimeService(JoggingTimeDAO(transactor), WeatherBitApi(httpClient, config.weatherBitApi), authedServiceHandler).service, "/joggingtime")
+        .mountService(
+          UserService(UserDAO(transactor), authedServiceHandler).service,"/user")
         .serve
     } yield exitCode
   }

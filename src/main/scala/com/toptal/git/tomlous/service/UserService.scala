@@ -7,7 +7,6 @@ import io.circe.generic.auto._
 import cats.effect.IO
 import cats.implicits._
 import com.toptal.git.tomlous.dao.JoggingTimeDAO
-
 import com.toptal.git.tomlous.service.meta.CrudService
 import org.http4s.HttpService
 import org.http4s.dsl.Http4sDsl
@@ -18,22 +17,19 @@ import io.circe.syntax._
 import io.circe.generic.auto._
 import io.circe.java8.time._
 import cats.effect.IO
+import com.toptal.git.tomlous.auth.AuthedServiceHandler
 import org.http4s.{HttpService, MediaType, Uri}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.circe._
-
 import io.circe.generic.auto._
 import io.circe.syntax._
 import fs2.Stream
 import io.circe.{Decoder, Encoder}
 import org.http4s.headers.{Location, `Content-Type`}
+import tsec.authentication.{SecuredRequestHandler, TSecBearerToken}
 
 
-case class UserService(dao: UserDAO) extends CrudService[User](dao, "user") {
+case class UserService(dao: UserDAO, authedServiceHandler:AuthedServiceHandler) extends CrudService[User](dao, authedServiceHandler) {
 
-
-
-
-
-  val service = crudService
+  val service = authedServiceHandler.securedRequestHandler.liftService(crudService)
 }

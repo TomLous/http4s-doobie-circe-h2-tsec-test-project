@@ -7,17 +7,15 @@ import java.time._
 import cats.effect.IO
 import com.toptal.git.tomlous.dao.error.DAOErrors._
 import com.toptal.git.tomlous.dao.meta.CrudDAO
+import com.toptal.git.tomlous.dao.meta.MetaConfig.UserMetaConfig
 import com.toptal.git.tomlous.model.{Password, User, UserRole}
 import doobie._
 import doobie.implicits._
 import doobie.util.transactor.Transactor
-import org.http4s.BasicCredentials
 
-case class UserDAO(transactor: Transactor[IO]) extends CrudDAO[User]{
+case class UserDAO(transactor: Transactor[IO]) extends CrudDAO[User] with UserMetaConfig{
 
-  private implicit val userRoleMeta: Meta[UserRole] = Meta[String].xmap(UserRole.unsafeFromString, _.role)
-  private implicit val passwordMeta: Meta[Password] = Meta[String].xmap[Password](x => Password(x), _.value)
-
+  implicit val han = LogHandler.jdkLogHandler
 
   def list: IO[List[User]] = {
     sql"SELECT id, role, username, password, created FROM User".query[User].to[List].transact(transactor)
@@ -32,7 +30,7 @@ case class UserDAO(transactor: Transactor[IO]) extends CrudDAO[User]{
   }
 
   def create(user: User): IO[Either[DAOError, User]] = {
-    sql"INSERT INTO User (role, username, password ) VALUES (${user.role}, ${user.username}, ${user.password})"
+    (fr"INSERT INTO User (role, username, password ) VALUES (${user.role}, ${user.username}, " ++ sqlPasswordFunction(user.password) ++ fr")")
       .update
       .withUniqueGeneratedKeys[Long]("id")
       .attemptSomeSqlState{
@@ -56,7 +54,7 @@ case class UserDAO(transactor: Transactor[IO]) extends CrudDAO[User]{
   }
 
   def update(id: Long, user: User): IO[Either[DAOError, User]] = {
-    sql"UPDATE User SET role = ${user.role}, username = ${user.username}, password = ${user.password} WHERE id = $id".update.run.transact(transactor).map { affectedRows =>
+    (fr"UPDATE User SET role = ${user.role}, username = ${user.username}, password = " ++ sqlPasswordFunction(user.password) ++ fr"WHERE id = $id").update.run.transact(transactor).map { affectedRows =>
       if (affectedRows == 1) {
         Right(user.copy(id = Some(id)))
       } else {

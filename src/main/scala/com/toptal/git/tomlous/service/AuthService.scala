@@ -23,12 +23,11 @@ import tsec.common.SecureRandomId
 
 
 case class AuthService(dao: AuthDAO, tokenStore: BearerTokenBackingStore, authConfig: AuthConfig) extends Http4sDsl[IO] with LazyLogging {
-  val EndPoint = "token"
 
   private val basicAuth: AuthMiddleware[IO, User] = BasicAuth(authConfig.basicRealm, dao.login)
 
   private val authEndpoint = AuthedService[User, IO] {
-    case GET -> Root / EndPoint as user => {
+    case GET -> Root / "token" as user => {
       val bearerToken = TSecBearerToken(SecureRandomId.Strong.generate, user.id.get, authConfig.tokenExpiry, None)
       tokenStore.put(bearerToken)
 
