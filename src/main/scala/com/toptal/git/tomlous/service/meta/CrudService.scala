@@ -4,7 +4,6 @@ import cats.effect.IO
 import cats.data._
 import com.toptal.git.tomlous.dao.error.DAOErrors._
 import com.toptal.git.tomlous.dao.meta.CrudDAO
-import com.toptal.git.tomlous.model.UserRole
 
 import com.toptal.git.tomlous.model.meta.DBItem
 import io.circe._

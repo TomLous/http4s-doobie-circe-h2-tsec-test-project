@@ -7,18 +7,16 @@ import fs2.{Stream, StreamApp}
 import org.http4s.blaze.http._
 import org.http4s.server.blaze.BlazeBuilder
 import org.http4s.client.blaze._
-// import org.http4s.client.blaze._
-
 import org.http4s.client._
-
 import cats.effect.IO
 import com.sun.tools.internal.xjc.reader.xmlschema.bindinfo.BIConversion.User
-import com.toptal.git.tomlous.dao.{JoggingTimeDAO, UserDAO}
+import com.toptal.git.tomlous.auth.InMemoryBearerTokenBackingStore
+import com.toptal.git.tomlous.dao._
 import fs2.{Stream, StreamApp}
 import fs2.StreamApp.ExitCode
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.blaze.BlazeBuilder
-import service.{JoggingTimeService, UserService}
+import service._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import tsec.passwordhashers.jca.BCrypt
@@ -35,7 +33,8 @@ object Server extends StreamApp[IO] with Http4sDsl[IO] {
       httpClient <- Http1Client.stream[IO]()
       exitCode <- BlazeBuilder[IO]
         .bindHttp(config.server.port, config.server.host)
-        .mountService(JoggingTimeService(JoggingTimeDAO(transactor),WeatherBitApi(httpClient, config.weatherBitApi)).service, "/")
+        .mountService(AuthService(AuthDAO(transactor), InMemoryBearerTokenBackingStore, config.auth).service, "/")
+        .mountService(JoggingTimeService(JoggingTimeDAO(transactor), WeatherBitApi(httpClient, config.weatherBitApi)).service, "/")
         .mountService(UserService(UserDAO(transactor)).service, "/")
         .serve
     } yield exitCode

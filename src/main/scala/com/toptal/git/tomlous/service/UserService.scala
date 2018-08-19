@@ -32,5 +32,8 @@ import org.http4s.headers.{Location, `Content-Type`}
 case class UserService(dao: UserDAO) extends CrudService[User](dao, "user") {
 
 
+
+
+
   val service = crudService
 }

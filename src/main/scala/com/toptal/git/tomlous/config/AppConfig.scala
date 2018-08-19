@@ -5,7 +5,7 @@ import com.typesafe.config.ConfigFactory
 import cats.implicits._
 import pureconfig.error.ConfigReaderException
 
-case class AppConfig(server: ServerConfig, database: DatabaseConfig, weatherBitApi: WeatherBitConfig)
+case class AppConfig(server: ServerConfig, database: DatabaseConfig, weatherBitApi: WeatherBitConfig, auth: AuthConfig)
 
 object AppConfig {
 

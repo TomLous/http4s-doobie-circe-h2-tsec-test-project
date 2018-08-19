@@ -19,16 +19,14 @@ import io.circe.generic.auto._
 import io.circe.java8.time._
 
 
-
-
-case class JoggingTimeService (dao: JoggingTimeDAO, weatherBitApi:WeatherBitApi) extends CrudService[JoggingTime](dao, "joggingtime")  {
+case class JoggingTimeService(dao: JoggingTimeDAO, weatherBitApi: WeatherBitApi) extends CrudService[JoggingTime](dao, "joggingtime") {
 
   val weatherService = HttpService[IO] {
 
     case req@POST -> Root / Endpoint =>
       val complex = for {
         item <- EitherT.right(req.decodeJson[JoggingTime])
-        updatedItem = weatherBitApi.weatherConditions(item)
+        updatedItem = weatherBitApi.updateWeatherConditions(item)
         createdResult <- EitherT(dao.create(updatedItem))
         getResult <- EitherT(dao.get(createdResult.id.get))
       } yield getResult
@@ -41,7 +39,7 @@ case class JoggingTimeService (dao: JoggingTimeDAO, weatherBitApi:WeatherBitApi)
     case req@PUT -> Root / Endpoint / LongVar(id) =>
       for {
         item <- req.decodeJson[JoggingTime]
-        updatedItem = weatherBitApi.weatherConditions(item)
+        updatedItem = weatherBitApi.updateWeatherConditions(item)
         updateResult <- dao.update(id, updatedItem)
         response <- result(updateResult)
       } yield response
