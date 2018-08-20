@@ -17,7 +17,7 @@ import doobie.implicits._
 
 case class JoggingTimeDAO(transactor: Transactor[IO]) extends CrudDAO[JoggingTime] with JoggingTimeMetaConfig{
 
-  implicit val han = LogHandler.jdkLogHandler
+//  implicit val han = LogHandler.jdkLogHandler
 
   def list: IO[List[JoggingTime]] = {
     sql"SELECT id, datetime, distance, duration, location, weather, created FROM JoggingTime".query[JoggingTime].to[List].transact(transactor)

@@ -23,7 +23,6 @@ import tsec.authentication._
 
 case class JoggingTimeService(dao: JoggingTimeDAO, weatherBitApi: WeatherBitApi, authedServiceHandler:AuthedServiceHandler) extends CrudService[JoggingTime](dao, authedServiceHandler) {
 
-//  val weatherService = TSecAuthService.withAuthorization(AuthService.) {
   val weatherService =  TSecAuthService.withAuthorization(authedServiceHandler.everyOne){
 
     case req@POST -> Root asAuthed user =>
@@ -48,8 +47,6 @@ case class JoggingTimeService(dao: JoggingTimeDAO, weatherBitApi: WeatherBitApi,
       } yield response
   }
 
-//  weatherService
-  // TSecAuthService.withAuthorization(AuthService.)
 
   val service =  authedServiceHandler.securedRequestHandler.liftService(weatherService <+> crudService)
 }

@@ -5,9 +5,7 @@ import org.http4s.Status
 
 object DAOErrors {
 
-  abstract class DAOError(val message:String){
-
-  }
+  abstract class DAOError(val message:String){}
 
   object NotFoundError extends DAOError("Not Found")
 

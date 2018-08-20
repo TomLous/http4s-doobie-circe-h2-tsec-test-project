@@ -13,14 +13,13 @@ import doobie._
 import doobie.implicits._
 import doobie.util.transactor.Transactor
 
-case class UserDAO(transactor: Transactor[IO]) extends CrudDAO[User] with UserMetaConfig{
+case class UserDAO(transactor: Transactor[IO]) extends CrudDAO[User] with UserMetaConfig {
 
-  implicit val han = LogHandler.jdkLogHandler
+  //  implicit val han = LogHandler.jdkLogHandler
 
   def list: IO[List[User]] = {
     sql"SELECT id, role, username, password, created FROM User".query[User].to[List].transact(transactor)
   }
-
 
   def get(id: Long): IO[Either[DAOError, User]] = {
     sql"SELECT id, role, username, password, created FROM User WHERE id = $id".query[User].option.transact(transactor).map {
@@ -33,14 +32,14 @@ case class UserDAO(transactor: Transactor[IO]) extends CrudDAO[User] with UserMe
     (fr"INSERT INTO User (role, username, password ) VALUES (${user.role}, ${user.username}, " ++ sqlPasswordFunction(user.password) ++ fr")")
       .update
       .withUniqueGeneratedKeys[Long]("id")
-      .attemptSomeSqlState{
+      .attemptSomeSqlState {
         case SqlState("23505") => UniqueConstraintError
         case state => CustomError(state)
       }.transact(transactor)
       .map {
         case Right(id) => Right(user.copy(id = Some(id)))
         case Left(error) => Left(error)
-    }
+      }
   }
 
   def delete(id: Long): IO[Either[DAOError, Unit]] = {

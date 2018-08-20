@@ -12,16 +12,31 @@ import doobie.implicits._
 object MetaConfig {
 
   trait JoggingTimeMetaConfig {
-    implicit val localTimeMeta: Meta[LocalTime] = Meta[Time].xmap(_.toLocalTime, Time.valueOf)
-    implicit val localDateTimeMeta: Meta[LocalDateTime] = Meta[Timestamp].xmap(ts => LocalDateTime.ofInstant(ts.toInstant, UTC), ldt =>  new Timestamp(ldt.toInstant(UTC).toEpochMilli))
+    implicit val localTimeMeta: Meta[LocalTime] = Meta[Time].xmap(
+      _.toLocalTime,
+      Time.valueOf
+    )
+
+    implicit val localDateTimeMeta: Meta[LocalDateTime] = Meta[Timestamp].xmap(
+      ts => LocalDateTime.ofInstant(ts.toInstant, UTC),
+      ldt => new Timestamp(ldt.toInstant(UTC).toEpochMilli)
+    )
   }
 
-  trait UserMetaConfig{
-    implicit val userRoleMeta: Meta[UserRole] = Meta[String].xmap(UserRole.unsafeFromString, _.role)
-    implicit val passwordMeta: Meta[Password] = Meta[String].xmap[Password](x => Password(x), _.value)
+  trait UserMetaConfig {
+    implicit val userRoleMeta: Meta[UserRole] = Meta[String].xmap(
+      UserRole.unsafeFromString,
+      _.role
+    )
 
-    def sqlPasswordFunction(password:String):Fragment = fr"HASH('SHA256', STRINGTOUTF8($password), 1000)"
-    def sqlPasswordFunction(password:Option[Password]):Fragment = sqlPasswordFunction(password.map(_.value).getOrElse(""))
+    implicit val passwordMeta: Meta[Password] = Meta[String].xmap[Password](
+      x => Password(x),
+      _.value
+    )
+
+    def sqlPasswordFunction(password: String): Fragment = fr"HASH('SHA256', STRINGTOUTF8($password), 1000)"
+
+    def sqlPasswordFunction(password: Option[Password]): Fragment = sqlPasswordFunction(password.map(_.value).getOrElse(""))
 
   }
 

@@ -31,14 +31,7 @@ object Server extends StreamApp[IO] with Http4sDsl[IO] {
       transactor <- Stream.eval(DatabaseConfig.transactor(config.database))
       _ <- Stream.eval(DatabaseConfig.initialize(transactor))
       httpClient <- Http1Client.stream[IO]()
-
-      authedServiceHandler = AuthedServiceHandler(UserDAO(transactor), InMemoryBearerTokenBackingStore, config.auth)
-
-//      userDAO = UserDAO(transactor)
-//      userStore = UserBackingStore(userDAO)
-//      tokenStore = InMemoryBearerTokenBackingStore
-//      authenticationHandler = SecuredRequestHandler(BearerTokenAuthenticator(tokenStore, userStore, config.auth.tokenSettings))
-
+      authedServiceHandler <- Stream(AuthedServiceHandler(UserDAO(transactor), InMemoryBearerTokenBackingStore, config.auth))
       exitCode <- BlazeBuilder[IO]
         .bindHttp(config.server.port, config.server.host)
         .mountService(
@@ -46,7 +39,7 @@ object Server extends StreamApp[IO] with Http4sDsl[IO] {
         .mountService(
           JoggingTimeService(JoggingTimeDAO(transactor), WeatherBitApi(httpClient, config.weatherBitApi), authedServiceHandler).service, "/joggingtime")
         .mountService(
-          UserService(UserDAO(transactor), authedServiceHandler).service,"/user")
+          UserService(UserDAO(transactor), authedServiceHandler).service, "/user")
         .serve
     } yield exitCode
   }
