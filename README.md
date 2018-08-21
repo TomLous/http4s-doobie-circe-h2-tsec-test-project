@@ -19,6 +19,13 @@ As part of their screening process you have to create a RESTful API that needs t
 
 Please note that this is the project that will be used to evaluate your skills. The project will be evaluated as if you were delivering it to a customer. We expect you to make sure that the app is fully functional and doesn’t have any obvious missing pieces. The deadline for the project is 2 weeks from today.
 
+### Run
+
+Just `sbt run`
+
+Create your own `application.conf` based on `application.template.conf`
+Register an account at [Weather Bit](https://www.weatherbit.io/) and use the api-key in your conf
+
 
 ### Note
 
@@ -41,3 +48,4 @@ Not done:
 - The API filtering should allow using parenthesis for defining operations precedence and use any combination of the available fields. The supported operations should at least include or, and, eq (equals), ne (not equals), gt (greater than), lt (lower than).
    Example -> (date eq '2016-05-01') AND ((distance gt 20) OR (distance lt 10)).
 - Write unit tests.
+
